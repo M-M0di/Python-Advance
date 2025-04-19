@@ -4,4 +4,4 @@
 
 Houdini Node Parameter Snapshot/Versioning App:
 
-The app allows user to track and save their different versions of selected nodes.
+The app allows user to track and save different versions of selected nodes.
