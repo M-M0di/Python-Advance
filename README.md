@@ -1,6 +1,6 @@
 # NODE SNAPSHOT TOOL
 
-This tool allows users to save selected nodes or entire node graph into a JSON file. The basic idea is allow users to save their favorite workflows or entire node graph as a template that can be imported into any Houdini project file.
+This tool saves selected nodes or entire node graph into a JSON file. The basic idea is allow users to save their favorite workflows or entire node graph as a template that can be imported into any Houdini project file.
 
 >Never again spend countless hours looking through old projects or creating your favorite workflow from scratch!
 
