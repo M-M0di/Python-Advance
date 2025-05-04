@@ -1,41 +1,40 @@
 # STYLE ***************************************************************************
-# content = assignment (Python Advanced)
-#
-# date    = 2025-03-07
-# email   = contact@alexanderrichtertd.com
+# content  : assignment (Python Advanced)
+# -----
+# Date:
+# created  : 2025-03-07
+# modified : 2025-05-04
+# -----
+# author   : Alexander Richter
+# email    : contact@alexanderrichtertd.com
 #**********************************************************************************
 
-
-# COMMENT --------------------------------------------------
-# Not optimal
 def set_color(ctrlList=None, color=None):
+    """
+    Overrides color if override color value exists in color map dictionary
+    """    
+    # Dictionary to hold values for color overrides
+    color_map = {
+        1 : 4,
+        2 : 13,
+        3 : 25,
+        4 : 17,
+        5 : 17,
+        6 : 15,
+        7 : 6,
+        8 : 16
+    }
+
+    override_color = color_map.get(color)
 
     for ctrlName in ctrlList:
         try:
             mc.setAttr(ctrlName + 'Shape.overrideEnabled', 1)
         except:
             pass
-
-        try:
-            if color == 1:
-                mc.setAttr(ctrlName + 'Shape.overrideColor', 4)
-            elif color == 2:
-                mc.setAttr(ctrlName + 'Shape.overrideColor', 13)
-            elif color == 3:
-                mc.setAttr(ctrlName + 'Shape.overrideColor', 25)
-            elif color == 4:
-                mc.setAttr(ctrlName + 'Shape.overrideColor', 17)
-            elif color == 5:
-                mc.setAttr(ctrlName + 'Shape.overrideColor', 17)
-            elif color == 6:
-                mc.setAttr(ctrlName + 'Shape.overrideColor', 15)
-            elif color == 7:
-                mc.setAttr(ctrlName + 'Shape.overrideColor', 6)
-            elif color == 8:
-                mc.setAttr(ctrlName + 'Shape.overrideColor', 16)
-        except:
-            pass
-
+        
+        if override_color:
+            mc.setAttr(ctrlName + 'Shape.overrideColor', override_color)
 
 # EXAMPLE
 # set_color(['circle','circle1'], 8)
