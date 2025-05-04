@@ -74,7 +74,7 @@ class NodesToJson:
                 "flag"  : {
                           "display"  : node.isDisplayFlagSet() if hasattr(node, 'isDisplayFlagSet') else False,
                           "render"   : node.isRenderFlagSet() if hasattr(node, 'isRenderFlagSet') else False,
-                          "template" : node.node.isTemplateFlagSet() if hasattr(node, 'isTemplateFlagSet') else False,
+                          "template" : node.isTemplateFlagSet() if hasattr(node, 'isTemplateFlagSet') else False,
                           "bypass"   : node.isBypassed() if hasattr(node, 'isBypassed') else False
                           },
                 "child" : {} 
@@ -182,18 +182,16 @@ class NodesToJson:
         
             # Set Flags
             flag_data = info.get("flag", {})
-    
-            if flag_data.get("display"):
-                node.setDisplayFlag(True)
-        
-            if flag_data.get("render"):
-                node.setRenderFlag(True)
+            flag_methods = {
+                            "display": node.setDisplayFlag,
+                            "render": node.setRenderFlag,
+                            "template": node.setTemplateFlag,
+                            "bypass": node.bypass
+                            }   
 
-            if flag_data.get("template"):
-                node.setTemplateFlag(True)
-        
-            if flag_data.get("bypass"):
-                node.bypass(True)
+            for flag, method in flag_methods.items():
+                if flag_data.get(flag):
+                    method(True)
         
             #Tidy Up
             node.moveToGoodPosition()
