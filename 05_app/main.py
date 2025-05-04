@@ -183,10 +183,10 @@ class NodesToJson:
             # Set Flags
             flag_data = info.get("flag", {})
             flag_methods = {
-                            "display": node.setDisplayFlag,
-                            "render": node.setRenderFlag,
-                            "template": node.setTemplateFlag,
-                            "bypass": node.bypass
+                            "display"   : node.setDisplayFlag,
+                            "render"    : node.setRenderFlag,
+                            "template"  : node.setTemplateFlag,
+                            "bypass"    : node.bypass
                             }   
 
             for flag, method in flag_methods.items():
