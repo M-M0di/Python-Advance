@@ -182,15 +182,17 @@ class NodesToJson:
         
             # Set Flags
             flag_data = info.get("flag", {})
+
+            # Check if the node has any flags to set
             flag_methods = {
-                            "display"   : node.setDisplayFlag,
-                            "render"    : node.setRenderFlag,
-                            "template"  : node.setTemplateFlag,
-                            "bypass"    : node.bypass
-                            }   
+                "display"   : getattr(node, "setDisplayFlag", None),
+                "render"    : getattr(node, "setRenderFlag", None),
+                "template"  : getattr(node, "setTemplateFlag", None),
+                "bypass"    : getattr(node, "bypass", None)
+            }
 
             for flag, method in flag_methods.items():
-                if flag_data.get(flag):
+                if flag_data.get(flag) and method is not None: # Check if the method exists
                     method(True)
         
             #Tidy Up
