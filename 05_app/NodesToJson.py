@@ -27,10 +27,10 @@ class NodesToJson:
     def _checkJsonPathExists(self):
       
         # Ensure the directory exists
-        os.makedirs(os.path.dirname(self.default_path), exist_ok=True)
+        os.makedirs(os.path.dirname(self.defaultPath), exist_ok=True)
 
         # Ensure the file exists
-        if not os.path.exists(self.default_path):
+        if not os.path.exists(self.defaultPath):
             with open(self.defaultPath, "w") as f:
                 json.dump({}, f)
 
