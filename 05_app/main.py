@@ -15,9 +15,6 @@ import os
 import json
 
 import hou 
-
-# -----
-
 class NodesToJson:
     """
     Class contains functions that allows user to export selected nodes to a Json file and 
@@ -26,8 +23,6 @@ class NodesToJson:
     def __init__(self):
         self.hip = hou.expandString("$HIP")
         self.default_path = os.path.join(self.hip, "data", "nodeExportData.json").replace("\\", "/")
-
-    # -----
 
     def checkJsonPathExists(self):
         """
@@ -42,8 +37,6 @@ class NodesToJson:
             with open(self.default_path, "w") as f:
                 json.dump({}, f)
 
-    # -----
-
     def exportSelectedNodesToJson(self):
         """
         Exports user selected nodes with their data into the JSON file - nodeExportData.json
@@ -51,11 +44,9 @@ class NodesToJson:
         """        
         # Get selected nodes
         selected_nodes = hou.selectedNodes()
-
         output_nodes = {"nodes": {}}
 
         for node in selected_nodes:
-            # Get the path of the node's root 
             path = node.parent().path().rstrip("/")
             root_path = "/".join(path.split("/")[:2]) + "/"
 
@@ -83,46 +74,34 @@ class NodesToJson:
 
             # Check if the node has children and may need to be unlocked
             if node.type().name().endswith(("solver", "net", "vop")):
-                
-                node.allowEditingOfContents()  # Unlock node
-
+                node.allowEditingOfContents() 
                 children = node.childrenAsData() if hasattr(node, 'childrenAsData') else {}
                 node_dict["child"] = children
-
-                node.matchCurrentDefinition()  # Lock node
-                
+                node.matchCurrentDefinition()               
             else:
-
                 children = node.childrenAsData() if hasattr(node, 'childrenAsData') else {}
                 node_dict["child"] = children
 
             # Add to the output dictionary
             output_nodes["nodes"][node.name()] = node_dict
 
-        # Ensure directory and JSON file exists
         self.checkJsonPathExists()
-
-        # Write it to a JSON file
         with open(self.default_path, "w") as f:
             json.dump(output_nodes, f, indent=4)
 
         return output_nodes
     
-    # -----
-
     def importNodesFromJson(self):
         """
         Imports nodes along with their data from the JSON file - nodeExportData.json
         Returns: 'created_nodes' dictionary with keyvalue pair of imported node's name and node object
         """        
-        # Ensure directory and JSON file exists
-        self.checkJsonPathExists()
 
-        # Load the JSON file
+        self.checkJsonPathExists()
         with open(self.default_path, "r") as f:
             data = json.load(f)
 
-        created_nodes = {}  # Create dict to hold imported nodes
+        created_nodes = {}
 
         for node_name, info in data["nodes"].items():
             type_name = info["type"]
@@ -133,31 +112,23 @@ class NodesToJson:
 
             # Check if parent node exists. If not, then creates parent node first
             if parent is None:
-
                 parent_data = info.get("parent", {})
                 parent_name = parent_data.get("name")
                 parent_type = parent_data.get("type")
-
                 parent = root.createNode(parent_type, parent_name)
             
             # Create nodes from data
             node = parent.createNode(type_name, node_name)
-
-            # Add imported nodes to dict by name
             created_nodes[node_name] = node
 
         return created_nodes
 
-    # -----   
-    
     def setNodeDataFromJson(self):
         """
         Sets imported nodes data by reading from nodeExportData.json file
         """        
-        # Ensure directory and JSON file exists
-        self.checkJsonPathExists()
 
-        # Load the JSON file
+        self.checkJsonPathExists()
         with open(self.default_path, "r") as f:
             data = json.load(f)
 
@@ -182,8 +153,6 @@ class NodesToJson:
         
             # Set Flags
             flag_data = info.get("flag", {})
-
-            # Check if the node has any flags to set
             flag_methods = {
                 "display"   : getattr(node, "setDisplayFlag", None),
                 "render"    : getattr(node, "setRenderFlag", None),
@@ -195,11 +164,4 @@ class NodesToJson:
                 if flag_data.get(flag) and method is not None: # Check if the method exists
                     method(True)
         
-            #Tidy Up
             node.moveToGoodPosition()
-
-# ------------------x------------------x------------------x------------------
-
-# For testing purpose only
-if __name__ == "__main__":
-    pass
