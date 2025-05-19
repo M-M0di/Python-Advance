@@ -44,8 +44,8 @@ class NodesToJson(TestParentClass):
         # It allows for easy export and import of nodes and their parameters, inputs, flags, and children.
         # This is especially useful for complex node networks, as it allows for easy sharing and reuse of node setups.
         #********************************************************************
-        os.makedirs(os.path.dirname(self.default_path), exist_ok=True)
-        if not os.path.exists(self.default_path):
+        os.makedirs(os.path.dirname(self.defaultPath), exist_ok=True)
+        if not os.path.exists(self.defaultPath):
             with open(self.defaultPath, "w") as f:
                 json.dump({}, f)
 
