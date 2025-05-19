@@ -3,9 +3,9 @@
 # -----
 # Date:
 # Created  : 29/04/2025
-# Modified : 03/05/2025
+# Modified : 19/05/2025
 # -----
-# Dependencies = json, os, hou
+# Dependencies = json, os, hou, wraps from functools
 # -----
 # Author  : Mayank Modi
 # Email   : mayank_modi@outlook.com
@@ -18,12 +18,12 @@ from functools import wraps
 import hou
 
 class TestParentClass: 
-
     def __init__(self):
         self.fileName = "nodeExportData.json"
 
 class NodesToJson(TestParentClass):
     """
+    # 33. CLASSES & PARENTING
     My Reasons for using a class:
     1. Keeps things tidy    - All the code for exporting and importing nodes lives in one place, which makes it way easier to deal with.
     2. Use it anywhere      - Once it's set up, you can drop it into other scripts or projects without rewriting everything.
@@ -38,16 +38,19 @@ class NodesToJson(TestParentClass):
         self.defaultPath = os.path.join(self.hip, "data", self.fileName).replace("\\", "/")
 
     def _checkJsonPathExists(self):
-      
-        # Ensure the directory exists
+        #********************************************************************
+        # 34. CONFIGURATION FILES
+        # Json data file is useful for this module since it's only storing nodes data that doesn't need to be read by others.
+        # It allows for easy export and import of nodes and their parameters, inputs, flags, and children.
+        # This is especially useful for complex node networks, as it allows for easy sharing and reuse of node setups.
+        #********************************************************************
         os.makedirs(os.path.dirname(self.default_path), exist_ok=True)
-
-        # Ensure the file exists
         if not os.path.exists(self.default_path):
             with open(self.defaultPath, "w") as f:
                 json.dump({}, f)
 
     def openJsonFile(func):
+    
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             self._checkJsonPathExists()
@@ -57,8 +60,7 @@ class NodesToJson(TestParentClass):
         return wrapper
         
     def exportSelectedNodesToJson(self):
-     
-        # Get selected nodes
+
         selected_nodes = hou.selectedNodes()
         output_nodes = {"nodes": {}}
 
@@ -97,15 +99,9 @@ class NodesToJson(TestParentClass):
             else:
                 children = node.childrenAsData() if hasattr(node, 'childrenAsData') else {}
                 node_dict["child"] = children
-
             output_nodes["nodes"][node.name()] = node_dict
         
         self._checkJsonPathExists()
-        #********************************************************************
-        # Json data file is useful for this module since it's only storing nodes data that doesn't need to be read by others.
-        # It allows for easy export and import of nodes and their parameters, inputs, flags, and children.
-        # This is especially useful for complex node networks, as it allows for easy sharing and reuse of node setups.
-        #********************************************************************
         with open(self.defaultPath, "w") as f:
             json.dump(output_nodes, f, indent=4) 
 
