@@ -17,31 +17,24 @@ import json
 import hou 
 class NodesToJson:
     """
-    Class contains functions that allows user to export selected nodes to a Json file and 
-    reimport them from the same file with their data (parameters, children, inputs, etc.)
+    Class contains functions that allows user to export/import selected nodes to/from a Json file.
     """    
     def __init__(self):
         self.hip = hou.expandString("$HIP")
-        self.default_path = os.path.join(self.hip, "data", "nodeExportData.json").replace("\\", "/")
+        self.DefaultPath = os.path.join(self.hip, "data", "nodeExportData.json").replace("\\", "/")
 
     def checkJsonPathExists(self):
-        """
-        This helper function checks if expected directory and JSON file exists.
-        If it does't, then it creates them.
-        """        
+      
         # Ensure the directory exists
         os.makedirs(os.path.dirname(self.default_path), exist_ok=True)
 
         # Ensure the file exists
         if not os.path.exists(self.default_path):
-            with open(self.default_path, "w") as f:
+            with open(self.DefaultPath, "w") as f:
                 json.dump({}, f)
 
     def exportSelectedNodesToJson(self):
-        """
-        Exports user selected nodes with their data into the JSON file - nodeExportData.json
-        Returns: 'out' dictionary containing exported nodes data     
-        """        
+     
         # Get selected nodes
         selected_nodes = hou.selectedNodes()
         output_nodes = {"nodes": {}}
@@ -86,19 +79,15 @@ class NodesToJson:
             output_nodes["nodes"][node.name()] = node_dict
 
         self.checkJsonPathExists()
-        with open(self.default_path, "w") as f:
+        with open(self.DefaultPath, "w") as f:
             json.dump(output_nodes, f, indent=4)
 
         return output_nodes
     
     def importNodesFromJson(self):
-        """
-        Imports nodes along with their data from the JSON file - nodeExportData.json
-        Returns: 'created_nodes' dictionary with keyvalue pair of imported node's name and node object
-        """        
 
         self.checkJsonPathExists()
-        with open(self.default_path, "r") as f:
+        with open(self.DefaultPath, "r") as f:
             data = json.load(f)
 
         created_nodes = {}
@@ -124,12 +113,9 @@ class NodesToJson:
         return created_nodes
 
     def setNodeDataFromJson(self):
-        """
-        Sets imported nodes data by reading from nodeExportData.json file
-        """        
 
         self.checkJsonPathExists()
-        with open(self.default_path, "r") as f:
+        with open(self.DefaultPath, "r") as f:
             data = json.load(f)
 
         for node_name, info in data["nodes"].items():
