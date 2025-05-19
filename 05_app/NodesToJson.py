@@ -3,7 +3,7 @@
 # -----
 # Date:
 # Created  : 29/04/2025
-# Modified : 03/05/2025
+# Modified : 19/05/2025
 # -----
 # Dependencies = json, os, hou
 # -----
@@ -13,6 +13,7 @@
 
 import os
 import json
+from functools import wraps
 
 import hou 
 class NodesToJson:
@@ -21,17 +22,26 @@ class NodesToJson:
     """    
     def __init__(self):
         self.hip = hou.expandString("$HIP")
-        self.DefaultPath = os.path.join(self.hip, "data", "nodeExportData.json").replace("\\", "/")
+        self.defaultPath = os.path.join(self.hip, "data", "nodeExportData.json").replace("\\", "/")
 
-    def checkJsonPathExists(self):
+    def _checkJsonPathExists(self):
       
         # Ensure the directory exists
         os.makedirs(os.path.dirname(self.default_path), exist_ok=True)
 
         # Ensure the file exists
         if not os.path.exists(self.default_path):
-            with open(self.DefaultPath, "w") as f:
+            with open(self.defaultPath, "w") as f:
                 json.dump({}, f)
+
+    def openJsonFile(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            self._checkJsonPathExists()
+            with open(self.defaultPath, "r") as f:
+                data = json.load(f)
+            return func(self, data, *args, **kwargs)
+        return wrapper
 
     def exportSelectedNodesToJson(self):
      
@@ -78,17 +88,14 @@ class NodesToJson:
             # Add to the output dictionary
             output_nodes["nodes"][node.name()] = node_dict
 
-        self.checkJsonPathExists()
-        with open(self.DefaultPath, "w") as f:
+        self._checkJsonPathExists()
+        with open(self.defaultPath, "w") as f:
             json.dump(output_nodes, f, indent=4)
 
         return output_nodes
     
-    def importNodesFromJson(self):
-
-        self.checkJsonPathExists()
-        with open(self.DefaultPath, "r") as f:
-            data = json.load(f)
+    @openJsonFile
+    def importNodesFromJson(self, data):
 
         created_nodes = {}
 
@@ -112,11 +119,8 @@ class NodesToJson:
 
         return created_nodes
 
-    def setNodeDataFromJson(self):
-
-        self.checkJsonPathExists()
-        with open(self.DefaultPath, "r") as f:
-            data = json.load(f)
+    @openJsonFile
+    def setNodeDataFromJson(self, data):
 
         for node_name, info in data["nodes"].items():
             path = info["path"]
