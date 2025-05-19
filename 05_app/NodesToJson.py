@@ -5,7 +5,7 @@
 # Created  : 29/04/2025
 # Modified : 19/05/2025
 # -----
-# Dependencies = json, os, hou
+# Dependencies = json, os, hou, wraps from functools
 # -----
 # Author  : Mayank Modi
 # Email   : mayank_modi@outlook.com
@@ -35,6 +35,7 @@ class NodesToJson:
                 json.dump({}, f)
 
     def openJsonFile(func):
+
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             self._checkJsonPathExists()
@@ -44,8 +45,7 @@ class NodesToJson:
         return wrapper
 
     def exportSelectedNodesToJson(self):
-     
-        # Get selected nodes
+
         selected_nodes = hou.selectedNodes()
         output_nodes = {"nodes": {}}
 
@@ -84,8 +84,6 @@ class NodesToJson:
             else:
                 children = node.childrenAsData() if hasattr(node, 'childrenAsData') else {}
                 node_dict["child"] = children
-
-            # Add to the output dictionary
             output_nodes["nodes"][node.name()] = node_dict
 
         self._checkJsonPathExists()
