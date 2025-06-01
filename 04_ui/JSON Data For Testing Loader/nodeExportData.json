@@ -1,0 +1,241 @@
+{
+    "nodes": {
+        "scale_to_houdini": {
+            "path": "/obj/bone_asset/",
+            "type": "xform",
+            "parent": {
+                "name": "bone_asset",
+                "type": "geo"
+            },
+            "root": "/obj/",
+            "parm": {
+                "group": "",
+                "grouptype": "guess",
+                "xOrd": "srt",
+                "rOrd": "xyz",
+                "t": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "r": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "s": [
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "shear": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": 1.0,
+                "p": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "pr": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "prexform_xOrd": "srt",
+                "prexform_rOrd": "xyz",
+                "prexform_t": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "prexform_r": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "prexform_s": [
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "prexform_shear": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "movecentroid": "0",
+                "movepivot": "0",
+                "attribs": "*",
+                "updatenmls": false,
+                "updateaffectednmls": true,
+                "vlength": true,
+                "invertxform": false,
+                "addattrib": false,
+                "outputattrib": "xform",
+                "outputmerge": "post"
+            },
+            "parm_label": {
+                "group": "Group",
+                "grouptype": "Group Type",
+                "xOrd": "Transform Order",
+                "rOrd": "Rotate Order",
+                "tx": "Translate",
+                "ty": "Translate",
+                "tz": "Translate",
+                "rx": "Rotate",
+                "ry": "Rotate",
+                "rz": "Rotate",
+                "sx": "Scale",
+                "sy": "Scale",
+                "sz": "Scale",
+                "shear1": "Shear",
+                "shear2": "Shear",
+                "shear3": "Shear",
+                "scale": "Uniform Scale",
+                "parmgroup_pivotxform": "parmgroup_pivotxform",
+                "px": "Pivot Translate",
+                "py": "Pivot Translate",
+                "pz": "Pivot Translate",
+                "prx": "Pivot Rotate",
+                "pry": "Pivot Rotate",
+                "prz": "Pivot Rotate",
+                "parmgroup_prexform": "parmgroup_prexform",
+                "prexform_xOrd": "Pre-Transform Order",
+                "prexform_rOrd": "Pre-Rotate Order",
+                "prexform_tx": "Pre-Translate",
+                "prexform_ty": "Pre-Translate",
+                "prexform_tz": "Pre-Translate",
+                "prexform_rx": "Pre-Rotate",
+                "prexform_ry": "Pre-Rotate",
+                "prexform_rz": "Pre-Rotate",
+                "prexform_sx": "Pre-Scale",
+                "prexform_sy": "Pre-Scale",
+                "prexform_sz": "Pre-Scale",
+                "prexform_shear1": "Pre-Shear",
+                "prexform_shear2": "Pre-Shear",
+                "prexform_shear3": "Pre-Shear",
+                "movecentroid": "Move Centroid to Origin",
+                "movepivot": "Move Pivot to Centroid",
+                "attribs": "Attributes",
+                "updatenmls": "Recompute Point Normals",
+                "updateaffectednmls": "Recompute Affected Normals",
+                "vlength": "Preserve Normal Length",
+                "invertxform": "Invert Transformation",
+                "addattrib": "Output Attribute",
+                "outputattrib": "Output Attribute",
+                "outputmerge": "Combine"
+            },
+            "input": [
+                {
+                    "from": "get_bones",
+                    "from_index": 0,
+                    "to_index": 0
+                }
+            ],
+            "flag": {
+                "display": false,
+                "render": false,
+                "template": false,
+                "bypass": false
+            },
+            "child": null
+        },
+        "OUT_bones": {
+            "path": "/obj/bone_asset/",
+            "type": "null",
+            "parent": {
+                "name": "bone_asset",
+                "type": "geo"
+            },
+            "root": "/obj/",
+            "parm": {
+                "copyinput": true,
+                "cacheinput": false
+            },
+            "parm_label": {
+                "copyinput": "Copy Input (Note: Input will be still cooked if disabled)",
+                "cacheinput": "Cache Input"
+            },
+            "input": [
+                {
+                    "from": "scale_to_houdini",
+                    "from_index": 0,
+                    "to_index": 0
+                }
+            ],
+            "flag": {
+                "display": true,
+                "render": true,
+                "template": false,
+                "bypass": false
+            },
+            "child": null
+        },
+        "get_bones": {
+            "path": "/obj/bone_asset/",
+            "type": "file",
+            "parent": {
+                "name": "bone_asset",
+                "type": "geo"
+            },
+            "root": "/obj/",
+            "parm": {
+                "filemode": "read",
+                "file": "D:/WORK/Muscles/Muscle_Tutorial/assets/baseMale/bone.fbx",
+                "reload": "0",
+                "objpattern": "*",
+                "geodatapath": "",
+                "missingframe": "error",
+                "loadtype": "full",
+                "packedviewedit": "unchanged",
+                "viewportlod": "box",
+                "packexpanded": true,
+                "delayload": false,
+                "mkpath": true,
+                "cachesize": 0,
+                "prefetch": false,
+                "f": [
+                    1,
+                    24
+                ],
+                "index": {
+                    "expression": "$FF-ch(\"f1\")"
+                },
+                "wrap": "cycle",
+                "retry": 0
+            },
+            "parm_label": {
+                "filemode": "File Mode",
+                "file": "Geometry File",
+                "reload": "Reload Geometry",
+                "objpattern": "Object Mask",
+                "geodatapath": "Geometry Data Path",
+                "missingframe": "Missing Frame",
+                "loadtype": "Load",
+                "packedviewedit": "Display Packed As",
+                "viewportlod": "Display As",
+                "packexpanded": "Pack Using Expanded/Absolute File Path",
+                "delayload": "Delay Load Geometry",
+                "mkpath": "Create Intermediate Directories",
+                "cachesize": "Cache Frames",
+                "prefetch": "Pre-fetch Geometry",
+                "f1": "Frame Range",
+                "f2": "Frame Range",
+                "index": "Sequence Index",
+                "wrap": "Wrap Mode",
+                "retry": "Save/Load Retries"
+            },
+            "input": [],
+            "flag": {
+                "display": false,
+                "render": false,
+                "template": false,
+                "bypass": false
+            },
+            "child": null
+        }
+    }
+}
