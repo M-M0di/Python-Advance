@@ -23,7 +23,6 @@ from Qt import QtWidgets, QtCompat, QtCore, QtGui
 import nodeTreeLogic
 
 TITLE = os.path.splitext(os.path.basename(__file__))[0]
-
 class Loader:
     """Loader class handles loading and displaying nodes from a JSON file in a UI"""
     def __init__(self):
@@ -88,7 +87,6 @@ class Loader:
                 if node.get("children"):
                     queue.append((node["children"], item))
 
-
     def onSelectAllToggled(self, state):
         self.treeWidget.blockSignals(True) 
         checkState = QtCore.Qt.Checked if state == QtCore.Qt.Checked else QtCore.Qt.Unchecked
@@ -115,11 +113,11 @@ class Loader:
     def onTreeItemChanged(self, item):
         self.treeWidget.blockSignals(True)
         state = item.checkState(0)
-
+        
         for child_id in range(item.childCount()):
             child = item.child(child_id)
             child.setCheckState(0, state)
-
+            
         self.treeWidget.blockSignals(False)
 
     def onTreeItemSelected(self):
@@ -158,9 +156,7 @@ class Loader:
             self.parmModel.appendRow([labelItem, valueItem])
 
     def browseJsonFile(self):
-        filePath, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self.wgLoader, "Select JSON File", "", "JSON Files (*.json);;All Files (*)"
-        )
+        filePath, _ = QtWidgets.QFileDialog.getOpenFileName(self.wgLoader, "Select JSON File", "", "JSON Files (*.json);;All Files (*)")
         if filePath:
             self.lineEdit.setText(filePath)
             self.loadJsonFile(filePath)
@@ -185,7 +181,6 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication([])
     
     app.setStyle(QtWidgets.QStyleFactory.create("fusion"))
-
     dark_palette = QtGui.QPalette()
     dark_palette.setColor(QtGui.QPalette.Window, QtGui.QColor(45, 45, 45))
     dark_palette.setColor(QtGui.QPalette.WindowText, QtGui.QColor(208, 208, 208))
