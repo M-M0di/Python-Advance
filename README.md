@@ -7,13 +7,14 @@
     * Software: Houdini 20.5 or higher
 
 ## What is Node Snapshot Tool?
-    This tool allows user to save Houdini node graph as a template 
-    and load either full node graph or selected nodes from the graph template.
+    This tool allows user to save Houdini node graph as a template and load either full node graph
+    or selected nodes from the graph template.
 
 ## Who is it for?
-    The tool allows artists and supervisors to quickly create templates for tasks that are common throughout the workflow. 
-    For example, render graphs, asset import graphs, lighting graphs or creating basic templates for project specific tasks 
-    such as CFX workflow or FX workflow for artists to quickly get started on their assigned shots.
+    The tool allows artists and supervisors to quickly create templates for tasks that are common 
+    throughout the workflow. For example, render graphs, asset import graphs, lighting graphs or 
+    creating basic templates for project specific tasks such as CFX workflow or FX workflow for 
+    artists to quickly get started on their assigned shots.
 
 ## Project Features:
     1. Save selected nodes/node graph as a template
