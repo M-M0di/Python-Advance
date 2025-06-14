@@ -430,7 +430,7 @@ class NsLoader(QtCore.QObject):
             nodeName = currentItem.data(0, QtCore.Qt.UserRole)
 
             if currentItem.checkState(0) == QtCore.Qt.Checked:
-                nodeInfo = self.findNodeByName(nodeName, self.nodesDict)
+                nodeInfo = self.findNodeByName(nodeName, self.workingNodesDict)
                 if nodeInfo:
                     checkedNodeData[nodeName] = nodeInfo
 
