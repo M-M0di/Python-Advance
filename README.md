@@ -1,12 +1,25 @@
 # NODE SNAPSHOT TOOL
 
-This tool saves selected nodes or entire node graph into a JSON file. The basic idea is allow users to save their favorite workflows or entire node graph as a template that can be imported into any Houdini project file.
-
 >Never again spend countless hours looking through old projects or creating your favorite workflow from scratch!
 
-### Expected Features:
+## Environment:
+    * OS: Windows
+    * Software: Houdini 20.5 or higher
+
+## What is Node Snapshot Tool?
+    This tool allows user to save Houdini node graph as a template and load either full node graph or selected nodes from the graph template.
+
+## Who is it for?
+    The tool allows artists and supervisors to quickly create templates for tasks that are common throughout the workflow. For example, render graphs, asset import graphs, lighting graphs or creating basic templates for project specific tasks such as CFX workflow or FX workflow for artists to quickly get started on their assigned shots.
+
+## Project Features:
     1. Save selected nodes/node graph as a template
-    2. Choose or edit external asset file paths before loading template into Houdini
-    3. Able to select the nodes you want to load from the template
-    4. Save different versions of same template
-    5. Be able to view entire node graph in the template before loading it into Houdini
+    2. Choose which part of the saved node graph you want to load in
+    3. Optionally, edit parameter values of nodes in the graph before loading it in
+
+### Future Updates:
+    1. Extending support to save and load deeper nested graph trees.
+    2. Support for all Houdini root contexts including /stage context for usd node graphs.
+    3. UI function to filter nodes by name or type.
+    4. Error warnings and safety checks for wrong input
+    5. Proper Documentation
