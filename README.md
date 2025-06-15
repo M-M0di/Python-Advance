@@ -1,5 +1,7 @@
 # NODE SNAPSHOT TOOL
 
+[TOOL DEMO](https://vimeo.com/1093514313)
+
 >Never again spend countless hours looking through old projects or creating your favorite workflow from scratch!
 
 ## Environment:
