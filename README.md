@@ -1,6 +1,6 @@
 # NODE SNAPSHOT TOOL
 
-[TOOL DEMO](https://vimeo.com/1093514313)
+[TOOL DEMO](https://i.vimeocdn.com/video/2026877478-aeda12b375a4e90e63e1bcb16bd2de8e43aeb3ec4596d67fae8767e3c61ac827-d_142x80?&r=pad&region=us)(https://vimeo.com/1093514313)
 
 >Never again spend countless hours looking through old projects or creating your favorite workflow from scratch!
 
