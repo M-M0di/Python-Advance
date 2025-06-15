@@ -6,7 +6,7 @@
 # Modified : 13/06/2025
 # -----
 # Dependencies = os, ast, hou, copy, json, collections.deque, QtWidgets, QtCompat, QtCore,
-#               QtGui, functools.wraps, nodeTreeLogic, nodeSnapLogic
+#               QtGui, functools.wraps, nodeTreeLogic, nodeSnapLogic, webbrowser
 # -----
 # Author  : Mayank Modi
 # Email   : mayank_modi@outlook.com
@@ -16,6 +16,7 @@ import os
 import ast
 import copy
 import json
+import webbrowser
 from functools import wraps
 from collections import deque
 
@@ -27,28 +28,30 @@ from nodeSnapLogic import NodeSnapLogic
 
 TITLE = os.path.splitext(os.path.basename(__file__))[0]
 PARENT = hou.ui.mainQtWindow()
-
 class NsLoader(QtCore.QObject):
     def __init__(self, parent=None):
-        super(NsLoader, self).__init__(parent)
-        self.ui_path = os.path.join(os.path.dirname(__file__), "ui", TITLE + ".ui")
-        self.wgLoader = QtCompat.loadUi(self.ui_path)
-        self.logic = NodeSnapLogic()
-        self.nodesDict = {}
-        self._editInProgress = False
-        self._previousTreeSelection = None
+            super(NsLoader, self).__init__(parent)
+            self.ui_path  = os.path.join(os.path.dirname(__file__), "ui", TITLE + ".ui")
+            self.wgLoader = QtCompat.loadUi(self.ui_path)
+            self.logic = NodeSnapLogic()
+            self.nodesDict = {}
+            self._editInProgress = False
+            self._previousTreeSelection = None
+            self._currentJsonPath = ""
 
-        self.applyCustomStyle()
-        self.loadWidgets()
-        self.setWidgetsProperties()
-        self.setConnections()
-        
-        self.tabsmetaData.parentWidget().hide()
-        self.wgLoader.installEventFilter(self)
-        self.treeWidget.viewport().installEventFilter(self)
-        self.parmView.viewport().installEventFilter(self)
-        
-        self.wgLoader.setWindowTitle("Node Snapshot Loader")
+            self.applyCustomStyle()
+            self.loadWidgets()
+            self.setWidgetsProperties()
+            self.setConnections()
+            
+            self.tabsmetaData.parentWidget().hide()
+            self.btnEdit.installEventFilter(self)
+            self.wgLoader.installEventFilter(self)
+            self.treeWidget.viewport().installEventFilter(self)
+            self.parmView.viewport().installEventFilter(self)
+            
+
+            self.wgLoader.setWindowTitle("Node Snapshot Loader")
 
     def loadWidgets(self):
         self.lineEdit = self.wgLoader.findChild(QtWidgets.QLineEdit, "filePath")
@@ -68,7 +71,7 @@ class NsLoader(QtCore.QObject):
         self.btnLoadSelected = self.wgLoader.findChild(QtWidgets.QPushButton, "btn_LoadSelected")
         
         self.rightPaneWidget = self.splitter.widget(1)
-   
+
     def setWidgetsProperties(self):
         self.metaDataLayout = self.metaDataContainer.layout()
         if self.metaDataLayout is None:
@@ -92,12 +95,12 @@ class NsLoader(QtCore.QObject):
         self.parmView.resizeRowsToContents()
         self.parmView.resizeColumnsToContents()
         self.parmView.setUpdatesEnabled(True)
-                         
+                        
         self.treeWidget.setColumnCount(1)
         self.treeWidget.setAlternatingRowColors(True)
         self.treeWidget.setHeaderLabels(["       Select All"])
         self.treeWidget.header().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-  
+
         self.selectAllCheckbox.setText("")
         self.selectAllCheckbox.setTristate(False)
         self.selectAllCheckbox.setChecked(False)
@@ -134,10 +137,32 @@ class NsLoader(QtCore.QObject):
                 border-radius: 3px;
             }
         """)
+        
+        self.btnBrowse.setStyleSheet("""
+            QPushButton {
+                border: none;
+                background-color: transparent;
+                padding: 0px;
+                qproperty-iconSize: 25px;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 10);
+            }
+            QPushButton:pressed {
+                background-color: rgba(255, 255, 255, 30);
+                border: 1px inset rgba(255, 255, 255, 40);
+                border-radius: 3px;
+            }
+        """)
+        
+        self.btnHelp.setToolTip("Open wiki")
+        self.btnInfoTabShow.setToolTip("show/hide right panel")
+        self.btnBrowse.setToolTip("open file browser to select a JSON file")                            
             
     def setConnections(self):
         self.btnSave.clicked.connect(self.btn_Save)
         self.btnReset.clicked.connect(self.btn_Reset)
+        self.btnHelp.clicked.connect(self.openHelpPage)
         self.btnCancel.clicked.connect(self.btn_Cancel)
         self.btnBrowse.clicked.connect(self.browseJsonFile)
         self.btnEdit.clicked.connect(self.set_btnEditEnabled)
@@ -171,6 +196,13 @@ class NsLoader(QtCore.QObject):
         self.wgLoader.adjustSize()
         
     def eventFilter(self, obj, event):
+        if obj == self.btnEdit and event.type() == QtCore.QEvent.Enter:
+            if self.btnEdit.isEnabled():
+                self.btnEdit.setToolTip("Click to edit selected parameter")
+            else:
+                self.btnEdit.setToolTip("Select a parameter value to edit to activate editing mode")
+            return False
+        
         if event.type() == QtCore.QEvent.KeyPress:
             if event.key() == QtCore.Qt.Key_Escape:
                 self.treeWidget.clearSelection()
@@ -199,11 +231,12 @@ class NsLoader(QtCore.QObject):
                 return True
 
         return False
-               
+            
     def loadJsonFile(self, filePath):
         with open(filePath, "r") as f:
             data = json.load(f)
 
+        self._currentJsonPath = filePath 
         nodesData = data.get("nodes", {})
         self.nodesDict = nodesData
         self.workingNodesDict = copy.deepcopy(nodesData)
@@ -220,13 +253,21 @@ class NsLoader(QtCore.QObject):
         return nodesData
     
     def browseJsonFile(self):
-        filePath, _ = QtWidgets.QFileDialog.getOpenFileName(self.wgLoader, "Select JSON File", "", "JSON Files (*.json);;All Files (*)")
+        hip_dir = os.path.dirname(hou.hipFile.path()) or os.getcwd()
+        filePath, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self.wgLoader,
+            "Select JSON File",
+            hip_dir,
+            "JSON Files (*.json);;All Files (*)"
+        )
+        self._currentJsonPath = filePath 
         if filePath:
             self.lineEdit.setText(filePath)
             self.loadJsonFile(filePath)
             
     def loadFromlineEdit(self):
         filePath = self.lineEdit.text()
+        self._currentJsonPath = filePath 
         if filePath and os.path.exists(filePath):
             self.loadJsonFile(filePath)
             
@@ -293,6 +334,11 @@ class NsLoader(QtCore.QObject):
                 childItem = topItem.child(childIndex)
                 childItem.setCheckState(0, checkState)
 
+                grandChildCount = childItem.childCount()
+                for grandChildIndex in range(grandChildCount):
+                    grandChildItem = childItem.child(grandChildIndex)
+                    grandChildItem.setCheckState(0, checkState)
+
         self.treeWidget.blockSignals(False)
 
     def onTreeItemChanged(self, changedItem):
@@ -302,6 +348,10 @@ class NsLoader(QtCore.QObject):
         for childIndex in range(changedItem.childCount()):
             childItem = changedItem.child(childIndex)
             childItem.setCheckState(0, newState)
+
+            for grandchildIndex in range(childItem.childCount()):
+                grandchildItem = childItem.child(grandchildIndex)
+                grandchildItem.setCheckState(0, newState)
 
         self.treeWidget.blockSignals(False)
         
@@ -326,9 +376,18 @@ class NsLoader(QtCore.QObject):
                             parmData = childData.get("parm", {}) or childData.get("parms", {})
                             labelData = childData.get("parm_label", {}) or childData.get("label", {})
                             break
+                        for child in parentData.get("child", {}).values():
+                            grandchildDict = child.get("grandchild")
+                            if isinstance(grandchildDict, dict):
+                                grandchildData = grandchildDict.get(nodeName)
+                                if grandchildData:
+                                    parmData = grandchildData.get("parm", {}) or grandchildData.get("parms", {})
+                                    labelData = grandchildData.get("parm_label", {})
+                                    break
+
             return func(self, parmData, labelData, *args, **kwargs)
         return wrapper
- 
+    
     @resolvedNodeData           
     def onTreeItemSelected(self, parmData, labelData, editable=False):
         selectedItems = self.treeWidget.selectedItems()
@@ -368,7 +427,7 @@ class NsLoader(QtCore.QObject):
 
             labelItem = QtGui.QStandardItem(label)
             valueItem = QtGui.QStandardItem(valueStr)
-
+            
             labelItem.setFlags(labelItem.flags() & ~QtCore.Qt.ItemIsEditable)
             labelItem.setData(key, QtCore.Qt.UserRole)
             valueItem.setFlags(valueItem.flags() & ~QtCore.Qt.ItemIsEditable)
@@ -381,7 +440,7 @@ class NsLoader(QtCore.QObject):
     def _handleParmSelectionChange(self, selected, deselected):
         hasValueSelection = any(index.column() == 1 for index in selected.indexes())
         self.btnEdit.setEnabled(hasValueSelection)
-
+        
     def _handleTreeItemSelectionChange(self):
         if not self.treeWidget.hasFocus():
             return
@@ -474,6 +533,7 @@ class NsLoader(QtCore.QObject):
     def set_btnEditEnabled(self):
         self.btn_Edit(True)
         
+        
     def findAndUpdateNode(self, container, targetName):
         stack = [container]
 
@@ -488,8 +548,14 @@ class NsLoader(QtCore.QObject):
                 if targetName in childDict:
                     return childDict[targetName]
 
+                for grandchildData in childDict.values():
+                    grandchildDict = grandchildData.get("grandchild", {})
+                    if targetName in grandchildDict:
+                        return grandchildDict[targetName]
+                    stack.append(grandchildDict)
+
                 stack.append(childDict)
-                
+
         return None
         
     def btn_Save(self):
@@ -499,9 +565,11 @@ class NsLoader(QtCore.QObject):
 
         item = selectedItems[0]
         nodeName = item.data(0, QtCore.Qt.UserRole)
+
         nodeDataRef = self.findAndUpdateNode(self.workingNodesDict, nodeName)
         if nodeDataRef is None:
             return
+
         parmData = nodeDataRef.get("parm", {})
 
         for row in range(self.parmModel.rowCount()):
@@ -523,6 +591,7 @@ class NsLoader(QtCore.QObject):
                 }.get(type(original), str)(valueStr)
 
             parmData[key] = value
+
         nodeDataRef["parm"] = parmData
 
         self._editInProgress = False
@@ -530,15 +599,63 @@ class NsLoader(QtCore.QObject):
         self.treeWidget.clearSelection()
         self.treeWidget.setCurrentItem(item)
         self.onTreeItemSelected(editable=False)
-        
+
+        reply = QtWidgets.QMessageBox.question(
+            self.wgLoader,
+            "Update Original File?",
+            "Currently, editing in session only copy of JSON data.\n\n"
+            "Do you also wish to overwrite the original JSON file with your edited values?\n\n"
+            "A backup will be created before saving.",
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            QtWidgets.QMessageBox.No
+        )
+
+        if reply == QtWidgets.QMessageBox.Yes and self._currentJsonPath:
+            # --- Create backup file ---
+            base, ext = os.path.splitext(self._currentJsonPath)
+            backupPath = f"{base}_backup{ext}"
+
+            with open(self._currentJsonPath, "r") as originalFile:
+                originalData = originalFile.read()
+
+            with open(backupPath, "w") as backup_file:
+                backup_file.write(originalData)
+
+            # --- Prepare updated data ---
+            originalJson = json.loads(originalData)
+            metaData = originalJson.get("meta", {})
+
+            updated_data = {
+                "nodes": self.workingNodesDict,
+                "meta": metaData
+            }
+
+            with open(self._currentJsonPath, "w") as json_file:
+                json.dump(updated_data, json_file, indent=4)
+
+            QtWidgets.QMessageBox.information(
+                self.wgLoader,
+                "Success",
+                f"JSON file updated.\nBackup saved as:\n{os.path.basename(backupPath)}"
+            )
+            
     def btn_Reset(self):
         selectedItems = self.treeWidget.selectedItems()
+        if not selectedItems:
+            return
+
         item = selectedItems[0]
         nodeName = item.data(0, QtCore.Qt.UserRole)
-        originalNode = self.nodesDict.get(nodeName)
 
-        # Reset 
-        self.workingNodesDict[nodeName] = copy.deepcopy(originalNode)
+        # Get original and working node references
+        originalNodeRef = self.findAndUpdateNode(self.nodesDict, nodeName)
+        workingNodeRef  = self.findAndUpdateNode(self.workingNodesDict, nodeName)
+
+        if not originalNodeRef or not workingNodeRef:
+            return
+
+        # Reset parameters
+        workingNodeRef["parm"] = copy.deepcopy(originalNodeRef.get("parm", {}))
 
         self.treeWidget.clearSelection()
         self.treeWidget.setCurrentItem(item)
@@ -548,10 +665,27 @@ class NsLoader(QtCore.QObject):
         self.btn_Edit(True)
         
     def btn_Cancel(self):
+        selectedItems = self.treeWidget.selectedItems()
+        if not selectedItems:
+            return
+
+        item = selectedItems[0]
+        nodeName = item.data(0, QtCore.Qt.UserRole)
+
+        # Reset just like Reset
+        originalNodeRef = self.findAndUpdateNode(self.nodesDict, nodeName)
+        workingNodeRef  = self.findAndUpdateNode(self.workingNodesDict, nodeName)
+
+        if originalNodeRef and workingNodeRef:
+            workingNodeRef["parm"] = copy.deepcopy(originalNodeRef.get("parm", {}))
+
         self._editInProgress = False
         self.btn_Edit(False)
         self.onTreeItemSelected(editable=False)
-               
+        
+    def openHelpPage(self):
+        webbrowser.open("https://github.com/M-M0di/Python-Advance")
+            
     def applyCustomStyle(self):
         self.wgLoader.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
 
@@ -591,7 +725,7 @@ class NsLoader(QtCore.QObject):
         QCheckBox:focus {
             outline: none;
         }
-               
+            
         QTreeView::indicator:unchecked {
             background-color: #333;
             border: 1px solid #666;
@@ -658,7 +792,7 @@ class NsLoader(QtCore.QObject):
             padding: 0px;
             margin: 0px;
         }
-           
+        
         QScrollBar:vertical {
             background: #2a2a2a;
             width: 12px;
@@ -731,11 +865,13 @@ class NsLoader(QtCore.QObject):
         """)
         
     def cleanup(self):
+        """Clean up memory and close the loader window."""
         self.nodesDict.clear()
         self.workingNodesDict.clear()
         self.wgLoader.close()
     
     def closeEvent(self, event):
+        """Clean up memory when window closes"""
         self.nodesDict.clear()
         self.workingNodesDict.clear()
         event.accept()
@@ -746,4 +882,3 @@ class NsLoader(QtCore.QObject):
         self.wgLoader.show()
         self.wgLoader.raise_()
         self.wgLoader.activateWindow()
-        

@@ -3,7 +3,7 @@
 # -----
 # Date:
 # Created  : 29/04/2025
-# Modified : 13/06/2025
+# Modified : 15/06/2025
 # -----
 # Dependencies = hou
 # -----
@@ -15,20 +15,20 @@ import hou
 
 class NodeSnapLogic:
     def __init__(self):
-        self.createdNodes = {}
+        pass
 
     def exportSelectedNodesToJson(self):
         selectedNodes = hou.selectedNodes()
-        outputNodes = {"nodes": {}}
+        outputNodes   = {"nodes": {}}
 
         for node in selectedNodes:
-            path = node.parent().path().rstrip("/")
+            path     = node.parent().path().rstrip("/")
             rootPath = "/".join(path.split("/")[:2]) + "/"
 
             nodeDict = {
                 "path"          : node.parent().path().rstrip("/") + "/",
                 "type"          : node.type().name(),
-                "root_parent":    {
+                "parent"        : {
                     "name"      : node.parent().name(),
                     "type"      : node.parent().type().name()
                                   },
@@ -42,7 +42,7 @@ class NodeSnapLogic:
                     "template"  : node.isTemplateFlagSet() if hasattr(node, 'isTemplateFlagSet') else False,
                     "bypass"    : node.isBypassed() if hasattr(node, 'isBypassed') else False
                                   },
-                "child": {}
+                "child"         : {}
             }
 
             for child in node.children():
@@ -50,7 +50,7 @@ class NodeSnapLogic:
                     "name"          : child.name(),
                     "path"          : child.parent().path().rstrip("/") + "/",
                     "type"          : child.type().name(),
-                    "child_parent"  : {
+                    "parent"        : {
                         "name"      : child.parent().name(),
                         "type"      : child.parent().type().name()
                                       },
@@ -64,8 +64,36 @@ class NodeSnapLogic:
                         "template"  : child.isTemplateFlagSet() if hasattr(child, 'isTemplateFlagSet') else False,
                         "bypass"    : child.isBypassed() if hasattr(child, 'isBypassed') else False
                                       },
-                    "grandchild"    : child.childrenAsData() if hasattr(child, 'childrenAsData') else {}
+                    "grandchild": {}
                 }
+
+                if child.type().name().endswith(("solver", "net", "vop")):
+                    child.allowEditingOfContents()
+                    childData["grandchild"] = child.childrenAsData()
+                    child.matchCurrentDefinition()
+                else:
+                    for grandchild in child.children():
+                        grandchildData = {
+                            "name"          : grandchild.name(),
+                            "path"          : grandchild.parent().path().rstrip("/") + "/",
+                            "type"          : grandchild.type().name(),
+                            "parent"        : {
+                                "name"      : grandchild.parent().name(),
+                                "type"      : grandchild.parent().type().name()
+                                              },
+                            "root"          : rootPath,
+                            "parm"          : grandchild.parmsAsData(),
+                            "parm_label"    : {parm.name(): parm.description() for parm in grandchild.parms()},
+                            "input"         : grandchild.inputsAsData(),
+                            "flag"          : {
+                                "display"   : grandchild.isDisplayFlagSet() if hasattr(grandchild, 'isDisplayFlagSet') else False,
+                                "render"    : grandchild.isRenderFlagSet() if hasattr(grandchild, 'isRenderFlagSet') else False,
+                                "template"  : grandchild.isTemplateFlagSet() if hasattr(grandchild, 'isTemplateFlagSet') else False,
+                                "bypass"    : grandchild.isBypassed() if hasattr(grandchild, 'isBypassed') else False
+                                              }
+                        }
+                        
+                        childData["grandchild"][grandchild.name()] = grandchildData
 
                 nodeDict["child"][child.name()] = childData
 
@@ -73,49 +101,38 @@ class NodeSnapLogic:
 
         return outputNodes
 
-    def createNodeIfNeeded(self, nodeName, nodeInfo, nodeDataDict):
-        if nodeName in self.createdNodes:
-            self.createdNodes[nodeName]
-            
-        nodeType = nodeInfo["type"]
-        rootPath = nodeInfo.get("root")
-        rootNode = hou.node(rootPath)
-        parentNode = rootNode
-
-        if "child_parent" in nodeInfo:
-            parentInfo = nodeInfo["child_parent"]
-            parentName = parentInfo["name"]
-            parentType = parentInfo["type"]
-            parentPath = f"{rootPath}{parentName}"
-            parentNode = hou.node(parentPath)
-            
-            if not parentNode:
-                if parentName in nodeDataDict["nodes"]:
-                    parentNode = self.createNodeIfNeeded(parentName, nodeDataDict["nodes"][parentName], nodeDataDict)
-                else:
-                    parentNode = rootNode.createNode(parentType, parentName)
-                    
-                self.createdNodes[parentName] = parentNode
-
-        finalPath = f"{parentNode.path()}/{nodeName}"
-        existingNode = hou.node(finalPath)
-        
-        if existingNode:
-            self.createdNodes[nodeName] = existingNode
-            return existingNode
-
-        newNode = parentNode.createNode(nodeType, nodeName)
-        self.createdNodes[nodeName] = newNode
-        
-        return newNode
-
     def importNodesFromJson(self, allNodeData, nodeDataDict):
-        self.createdNodes = {}
-        
-        for nodeName, nodeInfo in allNodeData.items():
-            self.createNodeIfNeeded(nodeName, nodeInfo, nodeDataDict)
+        createdNodes = {}
+
+        for node_name, info in allNodeData.items():
+            if node_name in createdNodes:
+                continue
+
+            type_name = info["type"]
+            root_path = info["root"]
+            path = info["path"]
+            parent_info = info.get("parent", {})
+            parent_name = parent_info.get("name")
+            parent_type = parent_info.get("type")
+
+            existing_node = hou.node(f"{path}{node_name}")
+            if existing_node:
+                createdNodes[node_name] = existing_node
+                continue
+
+            parent = (
+                hou.node(path) or
+                createdNodes.get(parent_name) or
+                hou.node(f"{root_path.rstrip('/')}/{parent_name}")
+            )
             
-        return self.createdNodes
+            if not parent and (root := hou.node(root_path)):
+                parent = root.createNode(parent_type, parent_name)
+                createdNodes[parent_name] = parent
+
+            if parent:
+                node = parent.createNode(type_name, node_name)
+                createdNodes[node_name] = node
 
     def setNodeDataFromJson(self, checkedNodeData, nodeDataDict):
         if not checkedNodeData:
@@ -135,22 +152,26 @@ class NodeSnapLogic:
 
             grandchildParameterData = nodeInfo.get("grandchild") or {}
             if grandchildParameterData:
-                node.setChildrenFromData(grandchildParameterData)
+                if node.type().name().endswith(("solver", "net", "vop")):
+                    node.setChildrenFromData(grandchildParameterData)
+                else:
+                    node.setParmsFromData(grandchildParameterData)
 
             inputData = nodeInfo.get("input")
             if inputData:
                 node.setInputsFromData(inputData)
 
-            flagData = nodeInfo.get("flag", {})
-            flagMethods = {
-                "display": getattr(node, "setDisplayFlag", None),
-                "render": getattr(node, "setRenderFlag", None),
-                "template": getattr(node, "setTemplateFlag", None),
-                "bypass": getattr(node, "bypass", None)
-            }
+            flagData    = nodeInfo.get("flag", {})
+            flagMethods =     {
+                "display"   : getattr(node, "setDisplayFlag", None),
+                "render"    : getattr(node, "setRenderFlag", None),
+                "template"  : getattr(node, "setTemplateFlag", None),
+                "bypass"    : getattr(node, "bypass", None)
+                              }
 
             for flagName, flagMethod in flagMethods.items():
                 if flagData.get(flagName) and flagMethod:
                     flagMethod(True)
-
+                    
+            node.matchCurrentDefinition()
             node.moveToGoodPosition()

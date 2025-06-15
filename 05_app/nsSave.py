@@ -4,9 +4,10 @@
 # -----
 # Date:
 # Created  : 26/05/2025
-# Modified : 13/06/2025
+# Modified : 15/06/2025
 # -----
-# Dependencies = os, hou, json, datetime, QtWidgets, QtCompat, QtCore, QtGui, nodeSnapLogic       
+# Dependencies = os, hou, json, datetime, QtWidgets, QtCompat, QtCore, QtGui, 
+#                nodeSnapLogic, webbrowser                 
 # -----
 # Author  : Mayank Modi
 # Email   : mayank_modi@outlook.com
@@ -15,6 +16,7 @@
 import os
 import json
 import getpass
+import webbrowser
 from datetime import datetime
 
 from Qt import QtWidgets, QtCompat, QtCore, QtGui
@@ -27,16 +29,16 @@ PARENT = hou.ui.mainQtWindow()
 
 class NsSave():
     def __init__(self):
-        self.ui_path = os.path.join(os.path.dirname(__file__), "ui", TITLE + ".ui")
-        self.wgSave = QtCompat.loadUi(self.ui_path)
-        self.logic = NodeSnapLogic()
+            self.ui_path = os.path.join(os.path.dirname(__file__), "ui", TITLE + ".ui")
+            self.wgSave = QtCompat.loadUi(self.ui_path)
+            self.logic = NodeSnapLogic()
 
-        self.loadWidgets()
-        self.setWidgetsProperties()
-        self.setConnections()
-        self.applyCustomStyle()
-        self.wgSave.setWindowTitle("Save Node Snapshot")
-        
+            self.loadWidgets()
+            self.setWidgetsProperties()
+            self.setConnections()
+            self.applyCustomStyle()
+            self.wgSave.setWindowTitle("Save Node Snapshot")
+            
     def loadWidgets(self):
         self.btnHelp = self.wgSave.findChild(QtWidgets.QPushButton, "btn_Help")
         self.btnSave = self.wgSave.findChild(QtWidgets.QPushButton, "btn_Save")
@@ -65,9 +67,13 @@ class NsSave():
                 border-radius: 3px;
             }
         """)
+        
+        self.btnHelp.setToolTip("Open wiki")
+        self.btnBrowse.setToolTip("Open file browser")    
     
     def setConnections(self):
         self.btnSave.clicked.connect(self.exportNodes)
+        self.btnHelp.clicked.connect(self.openHelpPage)
         self.btnBrowse.clicked.connect(lambda: self.selectFilePath())
         self.leFilePath.returnPressed.connect(self.SaveFromlineEdit)
         self.leComments.textChanged.connect(self.enforceCommentCharLimit)
@@ -140,10 +146,12 @@ class NsSave():
             self.path = filePath
             
     def selectFilePath(self):
+        hip_dir = os.path.dirname(hou.hipFile.path()) or os.getcwd()
+
         filePath, _ = QtWidgets.QFileDialog.getSaveFileName(
             self.wgSave,
-            "Save Node Snapshot",
-            "",
+            "Save JSON File",
+            hip_dir,
             "JSON Files (*.json);;All Files (*)"
         )
 
@@ -188,6 +196,9 @@ class NsSave():
     
     def getDateAndTime(self):
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    def openHelpPage(self):
+        webbrowser.open("https://github.com/M-M0di/Python-Advance")
 
     def show(self):
         self.lblAuthorName.setText(self.getAuthorName())
